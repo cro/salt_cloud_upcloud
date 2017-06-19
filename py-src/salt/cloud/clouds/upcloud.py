@@ -195,7 +195,7 @@ def avail_images(call=None):
     for storage in templates:
         ret[ storage.uuid ] = {
             attr: getattr( storage, attr )
-            for attr in storage.ATTRIBUTES
+            for attr in storage.ATTRIBUTES if hasattr(storage, attr)
         }
 
 
