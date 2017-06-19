@@ -35,3 +35,9 @@ Install the following:
 ## Implementation status
 
 So far only the most basic functionality has been implemented, more to come.
+
+
+## Bad Git hygiene
+
+The first few commits have been incredible boring, that's because because we were deploying 
+the scripts for testing via the CI/CD pipeline. Sorry ;-(
