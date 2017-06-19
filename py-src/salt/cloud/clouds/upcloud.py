@@ -148,7 +148,7 @@ def create(vm_):
     storage = [
         # Primary, holds the operating system
         Storage(uuid=image)
-    ] + [ Storage(size=s) for s in extra_storage ]
+    ] + [Storage(size=s) for s in extra_storage ]
 
     size_dict = _parse_size( vm_.get('size', DEFAULT_SIZE) )
 
@@ -164,13 +164,16 @@ def create(vm_):
     server_kwargs['storage_devices'] = storage
     server_kwargs['ip_addresses'] = ip_addresses
 
+    report_data = copy.deepcopy(server_kwargs)
+    report_data['storage_devices'] = extra_storage
+
     server_obj = Server(**server_kwargs)
 
     __utils__['cloud.fire_event'](
         'event',
         'requesting instance',
         'salt/cloud/{0}/requesting'.format(name),
-        args=_filter_event('requesting', server_kwargs,
+        args=_filter_event('requesting', report_data,
                                              ['name', 'profile', 'provider', 'driver']),
         sock_dir=__opts__['sock_dir'],
         transport=__opts__['transport']
