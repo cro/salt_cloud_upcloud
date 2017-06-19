@@ -189,7 +189,7 @@ def avail_images(call=None):
     manager = _get_manager()
 
     manager = _get_manager()
-    templates = manager.get_storages(type='template')
+    templates = manager.get_storages(storage_type='template')
 
     print(templates)
 
