@@ -54,6 +54,11 @@ except ImportError:
     pass
 
 
+# TO-DO: Is this a good idea?
+# For the record, this is Ubuntu Server 16.04 LTS (Xenial Xerus)
+DEFAULT_IMAGE='01000000-0000-4000-8000-000030060200'
+
+
 __virtualname__ = 'upcloud'
 
 
@@ -125,7 +130,10 @@ def create(vm_):
 
     ## TO-DO: Add support for cloning
 
-    image = vm_['image']
+    image = vm_.get('image', DEFAULT_IMAGE)
+
+
+
 
     server_obj = Server(**server_kwargs)
 
@@ -175,6 +183,19 @@ def avail_locations(call=None):
     return ret
 
 
+def avail_sizes(call=None):
+    """
+    Upcloud is very flexible, but this returns the preconfigured sizes
+    """
+    manager = _get_manager()
+    sizes = manager.get_server_sizes()
+
+    ret = {}
+    print( sizes )
+
+    return ret
+
+
 def avail_images(call=None):
     """
     REturns available upcloud templates
@@ -193,11 +214,10 @@ def avail_images(call=None):
 
     ret = {}
     for storage in templates:
-        ret[ storage.uuid ] = {
+        ret[storage.uuid] = {
             attr: getattr( storage, attr )
             for attr in storage.ATTRIBUTES if hasattr(storage, attr)
         }
-
 
     return ret
 
