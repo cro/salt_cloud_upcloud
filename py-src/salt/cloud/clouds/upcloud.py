@@ -164,9 +164,8 @@ def avail_locations(call=None):
     print(zones)
 
     ret = {}
-    for item in zones:
-        name = item['LOCATION']
-        ret[name] = item
+    for item in zones['zones']['zone']:
+        ret[item['id']] = ret[item['description']]
 
     return ret
 
