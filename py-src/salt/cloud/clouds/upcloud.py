@@ -249,7 +249,7 @@ def avail_sizes(call=None):
 
 def _parse_size(sz_str):
     r = re.compile(r'([0-9]+)cores__([0-9]+)MB')
-    mo = re.match('plan_(.*)')
+    mo = re.match('plan_(.*)', sz_str)
     if mo:
         return {
             'plan': mo.group(1)
