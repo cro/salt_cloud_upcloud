@@ -57,6 +57,7 @@ except ImportError:
 # TO-DO: Is this a good idea?
 # For the record, this is Ubuntu Server 16.04 LTS (Xenial Xerus)
 DEFAULT_IMAGE='01000000-0000-4000-8000-000030060200'
+DEFAULT_SIZE='1core__1024MB'
 
 
 __virtualname__ = 'upcloud'
@@ -132,8 +133,11 @@ def create(vm_):
 
     image = vm_.get('image', DEFAULT_IMAGE)
 
+    size_dict = vm_.get('size', DEFAULT_SIZE)
 
+    server_kwargs.update(size_dict)
 
+    #server_kwargs[]
 
     server_obj = Server(**server_kwargs)
 
@@ -191,12 +195,23 @@ def avail_sizes(call=None):
     sizes = manager.get_server_sizes()
 
     ret = {}
-    print( sizes )
     for sz in sizes['server_sizes']['server_size']:
-        sz_name = str(sz['core_number']) + 'cores__' + str(int(sz['memory_amount']) // 1024) + "GB"
+        sz_name = str(sz['core_number']) + 'cores__' + str(int(sz['memory_amount']) ) + "MB"
         ret[sz_name] = sz
 
+    plans = manager.get_request('/plan')
+    print( plans )
+
     return ret
+
+
+def parse_size(sz_str):
+    r = re.compile(r'([0-9]+)cores__([0-9]+)MB')
+    mo = re.match(r, sz_str)
+    return {
+        'core_number': int( mo.group(1) ),
+        'memory_amount': int( mo.group(2) )
+    }
 
 
 def avail_images(call=None):
@@ -209,8 +224,6 @@ def avail_images(call=None):
         raise SaltCloudException(
             'The avail_locations function must be called with -f or --function.'
         )
-
-    manager = _get_manager()
 
     manager = _get_manager()
     templates = manager.get_storages(storage_type='template')
