@@ -191,9 +191,13 @@ def avail_images(call=None):
     manager = _get_manager()
     templates = manager.get_storages(storage_type='template')
 
-    print(templates)
-
     ret = {}
+    for storage in templates:
+        ret[ storage.uuid ] = {
+            attr: getattr( storage, attr )
+            for attr in storage.ATTRIBUTES
+        }
+
 
     return ret
 
