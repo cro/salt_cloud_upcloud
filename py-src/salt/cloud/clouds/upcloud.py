@@ -333,7 +333,7 @@ def _filter_event_internal(*args, **kwargs):
     """
     Filler  function to compensate for the upcoming release
     """
-    result =  {
+    result = {
         '_args': args,
 
     }
@@ -341,4 +341,6 @@ def _filter_event_internal(*args, **kwargs):
     return result
 
 
-_filter_event = __utils__.get('cloud.filter_event', _filter_event_internal)
+def _filter_event(*args, **kwargs):
+    f = __utils__.get('cloud.filter_event', _filter_event_internal)
+    return f(*args, **kwargs)
