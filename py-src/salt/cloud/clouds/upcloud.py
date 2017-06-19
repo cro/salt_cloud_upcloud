@@ -121,6 +121,12 @@ def create(vm_):
 
     manager = _get_manager(vm_)
 
+    location = vm_.get('location')
+
+    ## TO-DO: Add support for cloning
+
+    image = vm_['image']
+
     server_obj = Server(**server_kwargs)
 
     manager.create_server(server_obj)
@@ -165,6 +171,29 @@ def avail_locations(call=None):
     ret = {}
     for item in zones['zones']['zone']:
         ret[item['id'].encode('ascii')] = item
+
+    return ret
+
+
+def avail_images(call=None):
+    """
+    REturns available upcloud templates
+    """
+    from salt.cloud.exceptions import SaltCloudException
+    if call == 'action':
+
+        raise SaltCloudException(
+            'The avail_locations function must be called with -f or --function.'
+        )
+
+    manager = _get_manager()
+
+    manager = _get_manager()
+    templates = manager.get_storages(type='template')
+
+    print(templates)
+
+    ret = {}
 
     return ret
 
