@@ -150,7 +150,7 @@ def create(vm_):
         Storage(uuid=image)
     ] + [ Storage(size=s) for s in extra_storage ]
 
-    size_dict = vm_.get('size', DEFAULT_SIZE)
+    size_dict = _parse_size( vm_.get('size', DEFAULT_SIZE) )
 
     server_kwargs.update(size_dict)
 
@@ -247,7 +247,7 @@ def avail_sizes(call=None):
     return ret
 
 
-def parse_size(sz_str):
+def _parse_size(sz_str):
     r = re.compile(r'([0-9]+)cores__([0-9]+)MB')
     mo = re.match('plan_(.*)')
     if mo:
