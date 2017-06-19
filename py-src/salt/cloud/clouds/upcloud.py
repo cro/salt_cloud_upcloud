@@ -200,18 +200,27 @@ def avail_sizes(call=None):
         ret[sz_name] = sz
 
     plans = manager.get_request('/plan')
-    print( plans )
+    for plan in plans['plans']['plan']:
+        plan_id = 'plan_' + plan['name']
+        ret[plan_id] = plan
 
     return ret
 
 
 def parse_size(sz_str):
     r = re.compile(r'([0-9]+)cores__([0-9]+)MB')
+    mo = re.match('plan_(.*)')
+    if mo:
+        return {
+            'plan': mo.group(1)
+        }
     mo = re.match(r, sz_str)
-    return {
-        'core_number': int( mo.group(1) ),
-        'memory_amount': int( mo.group(2) )
-    }
+    if mo:
+        return {
+            'core_number': int( mo.group(1) ),
+            'memory_amount': int( mo.group(2) ),
+            'plan': custom
+        }
 
 
 def avail_images(call=None):
