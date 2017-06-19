@@ -183,7 +183,8 @@ def create(vm_):
 
     create_server_result = manager.create_server(server_obj)
 
-    log.info('create_server_result: {0}'.format(create_server_result))
+    log.info('create_server_result: {0}'.format(create_server_result.__dict__))
+
 
 
 def _get_manager(vm_=None):
