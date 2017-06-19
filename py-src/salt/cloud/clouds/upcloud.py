@@ -58,7 +58,7 @@ if salt.config is None:
 HAS_LIBS = False
 try:
     import upcloud_api
-    from upcloud_api import Server, Storage, ZONE, login_user_block
+    from upcloud_api import Server, Storage, ZONE, login_user_block, IPAddress
     HAS_LIBS = True
 except ImportError:
     pass
@@ -185,6 +185,51 @@ def create(vm_):
 
     log.info('create_server_result: {0}'.format(create_server_result.__dict__))
 
+    # Let's create some information worth logging out from this
+
+    if create_server_result is not None and isinstance(create_server_result, Server) and create_server_result.populated:
+
+        # Keep this around, we are going to need it soon enough
+        new_server_info = create_server_result.to_dict()
+        log.debug('create_server_result/new_server_info: {0}', new_server_info)
+
+        # Will need this soon enough
+        username = create_server_result.username
+        password = create_server_result.password
+
+        control_ip = _select_control_ip(create_server_result.ip_addresses)
+
+        if control_ip is None:
+            log.error("Could not use any of the addresses in {0} for ssh control".format(new_server_info['ip_addresses']))
+            return False
+
+        vm_['ssh_host'] = control_ip.address
+        vm_['password'] = password
+        vm_['ssh_username'] = username
+
+        ret = __utils__['cloud.bootstrap'](vm_, __opts__)
+        ret.update(new_server_info)
+
+        # TO-DO: insert code here to attach volumes, and other configuration steps.
+        #
+        # check salt/cloud/clouds/mazure.py for inspiration
+        __utils__['cloud.fire_event'](
+            'event',
+            'created instance',
+            'salt/cloud/{0}/created'.format(vm_['name']),
+            args=_filter_event(**{
+                'name': vm_['name'],
+                'profile': vm_['profile'],
+                'provider': vm_['driver'],
+            }),
+            sock_dir=__opts__['sock_dir'],
+            transport=__opts__['transport']
+        )
+        return ret
+
+    else:
+        log.error("Could not create Upcloud server, error: {0}".format(str(create_server_result)))
+        return False
 
 
 def _get_manager(vm_=None):
@@ -249,22 +294,6 @@ def avail_sizes(call=None):
         ret[plan_id] = plan
 
     return ret
-
-
-def _parse_size(sz_str):
-    r = re.compile(r'([0-9]+)cores__([0-9]+)MB')
-    mo = re.match('plan_(.*)', sz_str)
-    if mo:
-        return {
-            'plan': mo.group(1)
-        }
-    mo = re.match(r, sz_str)
-    if mo:
-        return {
-            'core_number': int( mo.group(1) ),
-            'memory_amount': int( mo.group(2) ),
-            'plan': 'custom'
-        }
 
 
 def avail_images(call=None):
@@ -346,5 +375,42 @@ def _filter_event_internal(*args, **kwargs):
 
 
 def _filter_event(*args, **kwargs):
+    """
+    Smart stub
+    """
     f = __utils__.get('cloud.filter_event', _filter_event_internal)
     return f(*args, **kwargs)
+
+
+def _select_control_ip(ip_addresses, control_from_inside):
+    """
+    Selects either an internal or external IP address (the first one), depending
+    on the value of the parameter `control_from_inside`. We need an IPv4 address to connect to,
+    since is the safest way to ensure routability.
+    """
+    for ip_address in ip_addresses:
+        if control_from_inside and ip_address.access == 'private' and ip_address.family == "IPv4" :
+            # Good enough
+            return ip_address
+        if not control_from_inside and ip_address.access == 'public' and ip_address.family == "IPv4" :
+            # Good enough gain
+            return ip_address
+
+    # Got here, not a good thing
+    return None
+
+
+def _parse_size(sz_str):
+    r = re.compile(r'([0-9]+)cores__([0-9]+)MB')
+    mo = re.match('plan_(.*)', sz_str)
+    if mo:
+        return {
+            'plan': mo.group(1)
+        }
+    mo = re.match(r, sz_str)
+    if mo:
+        return {
+            'core_number': int( mo.group(1) ),
+            'memory_amount': int( mo.group(2) ),
+            'plan': 'custom'
+        }
