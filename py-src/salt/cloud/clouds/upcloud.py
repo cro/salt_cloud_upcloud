@@ -19,6 +19,16 @@ Used to control UpCloud VPS provider
 
    * ``ssh_pubkey``: a key to copy to the new machine
    * ``location``: which datacenter to use,
+   * ``size``: one of plan_XXX or the numeric sizes, call `salt-cloud --list-sizes upcloud` to find out the sizes
+   * ``extra_storage``: a list of blank max_iops disk to add, with size
+                        in gigabytes.
+   * ``login_user``: the user to create for login
+   * ``ip_addresses``: configuration about network interfaces/ip addresses. Each contains a
+                       ``access`` with `public` or `private`, and a ``family`` with either
+                        ``IPv4`` or IPv6``
+   * ``control_from_inside``: if we should connect back using one of the inner interfaces. This won't
+                       work if the salt minion is at an outside network, the default is False but
+                       that won't work if there is no public ip address
 
 '''
 
@@ -133,15 +143,44 @@ def create(vm_):
 
     image = vm_.get('image', DEFAULT_IMAGE)
 
+    extra_storage = vm_.get('extra_storage', [])
+
+    storage = [
+        # Primary, holds the operating system
+        Storage(uuid=image)
+    ] + [ Storage(size=s) for s in extra_storage ]
+
     size_dict = vm_.get('size', DEFAULT_SIZE)
 
     server_kwargs.update(size_dict)
 
-    #server_kwargs[]
+    # Let's take care of any network configuration
+    ip_addresses = vm_.get('ip_addresses', [])
+
+    control_from_inside = vm_.get('control_from_inside', False)
+
+    server_kwargs['zone'] = location
+    server_kwargs['hostname'] = vm_.get('hostname', name)
+    server_kwargs['storage_devices'] = storage
+    server_kwargs['ip_addresses'] = ip_addresses
 
     server_obj = Server(**server_kwargs)
 
-    manager.create_server(server_obj)
+    __utils__['cloud.fire_event'](
+        'event',
+        'requesting instance',
+        'salt/cloud/{0}/requesting'.format(name),
+        args=__utils__['cloud.filter_event']('requesting', server_kwargs,
+                                             ['name', 'profile', 'provider', 'driver']),
+        sock_dir=__opts__['sock_dir'],
+        transport=__opts__['transport']
+    )
+
+    log.debug('vm_kwargs: {0}'.format(server_kwargs))
+
+    create_server_result = manager.create_server(server_obj)
+
+    log.info('create_server_result: {0}'.format(create_server_result))
 
 
 def _get_manager(vm_=None):
@@ -179,6 +218,7 @@ def avail_locations(call=None):
 
     manager = _get_manager()
     zones = manager.get_zones()
+
 
     ret = {}
     for item in zones['zones']['zone']:
@@ -219,7 +259,7 @@ def parse_size(sz_str):
         return {
             'core_number': int( mo.group(1) ),
             'memory_amount': int( mo.group(2) ),
-            'plan': custom
+            'plan': 'custom'
         }
 
 
@@ -245,6 +285,20 @@ def avail_images(call=None):
         }
 
     return ret
+
+
+def script(vm_):
+    '''
+    Return the script deployment object
+    '''
+    return salt.utils.cloud.os_script(
+        config.get_cloud_config_value('script', vm_, __opts__),
+        vm_,
+        __opts__,
+        salt.utils.cloud.salt_config_to_yaml(
+            salt.utils.cloud.minion_config(__opts__, vm_)
+        )
+    )
 
 
 def _validate_name(name):
