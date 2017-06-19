@@ -161,6 +161,7 @@ def avail_locations(call=None):
 
     manager = _get_manager()
     zones = manager.get_zones()
+    print(zones)
 
     ret = {}
     for item in zones:
