@@ -1,4 +1,4 @@
 
 deploy:
    script:
-      - scp py-src/salt/cloud/clouds/upcloud.py /var/cache/salt/master/extmods/cloud/clouds/upcloud.py
+      - scp py-src/salt/cloud/clouds/upcloud.py instance-1:/var/cache/salt/master/extmods/cloud/clouds/upcloud.py
