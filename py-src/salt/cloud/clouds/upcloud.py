@@ -197,7 +197,7 @@ def create(vm_):
         username = create_server_result.username
         password = create_server_result.password
 
-        control_ip = _select_control_ip(create_server_result.ip_addresses)
+        control_ip = _select_control_ip(create_server_result.ip_addresses, control_from_inside)
 
         if control_ip is None:
             log.error("Could not use any of the addresses in {0} for ssh control".format(new_server_info['ip_addresses']))
