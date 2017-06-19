@@ -120,7 +120,7 @@ def create(vm_):
         'event',
         'starting create',
         'salt/cloud/{0}/creating'.format(name),
-        args=__utils__['cloud.filter_event']('creating', vm_, ['name', 'profile', 'provider', 'driver']),
+        args=_filter_event('creating', vm_, ['name', 'profile', 'provider', 'driver']),
         sock_dir=__opts__['sock_dir'],
         transport=__opts__['transport']
     )
@@ -170,7 +170,7 @@ def create(vm_):
         'event',
         'requesting instance',
         'salt/cloud/{0}/requesting'.format(name),
-        args=__utils__['cloud.filter_event']('requesting', server_kwargs,
+        args=_filter_event('requesting', server_kwargs,
                                              ['name', 'profile', 'provider', 'driver']),
         sock_dir=__opts__['sock_dir'],
         transport=__opts__['transport']
@@ -327,3 +327,18 @@ def get_pub_key(vm_):
     return config.get_cloud_config_value(
         'ssh_pubkey', vm_, __opts__, search_global=False
     )
+
+
+def _filter_event_internal(*args, **kwargs):
+    """
+    Filler  function to compensate for the upcoming release
+    """
+    result =  {
+        '_args': args,
+
+    }
+    result.update(kwargs)
+    return result
+
+
+_filter_event = __utils__.get('cloud.filter_event', _filter_event_internal)
