@@ -165,7 +165,7 @@ def avail_locations(call=None):
 
     ret = {}
     for item in zones['zones']['zone']:
-        ret[ item['id'].encode('ascii') ] = ret[item['description'].encode('ascii')]
+        ret[item['id'].encode('ascii')] = item
 
     return ret
 
