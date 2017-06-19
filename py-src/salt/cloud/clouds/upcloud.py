@@ -193,7 +193,7 @@ def avail_sizes(call=None):
     ret = {}
     print( sizes )
     for sz in sizes['server_sizes']['server_size']:
-        sz_name = str(sz['core_numer']) + 'cores__' + str(int(sz['memory_amount']) // 1024) + "GB"
+        sz_name = str(sz['core_number']) + 'cores__' + str(int(sz['memory_amount']) // 1024) + "GB"
         ret[sz_name] = sz
 
     return ret
